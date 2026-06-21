@@ -1,14 +1,20 @@
 #!/bin/sh
 mkdir -p /tmp/tailscale
 /var/runtime/tailscaled --tun=userspace-networking --socks5-server=localhost:1055 &
-until /var/runtime/tailscale up --authkey=${TAILSCALE_AUTHKEY} --hostname=aws-lambda-app
-do
-    sleep 0.1
-done
-echo Tailscale started
+if [ -n "${TAILSCALE_AUTHKEY}" ]; then
+  until /var/runtime/tailscale up --authkey=${TAILSCALE_AUTHKEY} --hostname=aws-lambda-app
+  do
+      sleep 0.1
+  done
+  echo Tailscale started
+  PROXY="socks5://localhost:1055/"
+else
+  echo Tailscale disabled
+  PROXY=""
+fi
 
 if [ -z "${AWS_LAMBDA_RUNTIME_API}" ]; then
-  exec env ALL_PROXY="socks5://localhost:1055/" /usr/local/bin/aws-lambda-rie /var/lang/bin/python3.6 -m awslambdaric $@
+  exec env ALL_PROXY="${PROXY}" /usr/local/bin/aws-lambda-rie /var/lang/bin/python3 -m awslambdaric $@
 else
-  exec env ALL_PROXY="socks5://localhost:1055/" /var/lang/bin/python3.6 -m awslambdaric $@
-fi     
+  exec env ALL_PROXY="${PROXY}" /var/lang/bin/python3 -m awslambdaric $@
+fi
