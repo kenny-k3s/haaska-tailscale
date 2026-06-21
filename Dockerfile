@@ -1,8 +1,8 @@
-FROM python:3.12-slim as builder
+FROM python:3.11-slim as builder
 WORKDIR /app
 COPY ./haaska/haaska.py .
 COPY ./haaska/config/config.json.sample ./config.json
-RUN pip install -t . "requests<2.32" "urllib3<3" "certifi" awslambdaric pysocks
+RUN pip install -t . requests awslambdaric
 
 FROM alpine:latest as tailscale
 WORKDIR /app
@@ -10,7 +10,7 @@ ENV TSFILE=tailscale_latest_amd64.tgz
 RUN wget https://pkgs.tailscale.com/stable/${TSFILE} && \
   tar xzf ${TSFILE} --strip-components=1
 
-FROM public.ecr.aws/lambda/python:3.12
+FROM public.ecr.aws/lambda/python:3.11
 ADD https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie /usr/local/bin/aws-lambda-rie
 RUN chmod 755 /usr/local/bin/aws-lambda-rie
 COPY ./custom_entrypoint /var/runtime/custom_entrypoint
