@@ -2,7 +2,7 @@ FROM python:3.12-slim as builder
 WORKDIR /app
 COPY ./haaska/haaska.py .
 COPY ./haaska/config/config.json.sample ./config.json
-RUN pip install -t . requests awslambdaric
+RUN pip install -t . requests awslambdaric pysocks
 
 FROM alpine:latest as tailscale
 WORKDIR /app
